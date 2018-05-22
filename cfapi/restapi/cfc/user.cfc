@@ -1,4 +1,3 @@
-/*test*/
 component hint = 'user rest functions' displayname = 'user' {
   
   public struct function getUser(required numeric userid)
