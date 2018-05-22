@@ -84,7 +84,7 @@ component hint = 'user rest functions' displayname = 'user' {
       }
       
       resObj['success'] = true;
-      resObj['message'] = Hash(qryGetUser.salt & qryGetUser.password_nohash);
+      resObj['message'] = qryGetUser.recordcount & ' user records returned';
       resObj['data'] = SerializeJSON(returnArray);
       
     }

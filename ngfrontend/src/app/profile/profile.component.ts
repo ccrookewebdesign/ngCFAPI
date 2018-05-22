@@ -15,10 +15,12 @@ import { UserService, User } from './../services/user.service';
 
 function passwordConfirm(c: AbstractControl): any {
   if (!c.parent || !c) return;
+
   const pwd = c.parent.get('password');
   const cpwd = c.parent.get('confirmPassword');
 
   if (!pwd || !cpwd) return;
+
   if (pwd.value !== cpwd.value) {
     return { invalid: true };
   }
@@ -33,6 +35,7 @@ export class ProfileComponent implements OnInit {
   user: User;
   userid: number;
   hide = true;
+  pageHeader = 'Register';
   private sub: any;
 
   message: string;
@@ -68,28 +71,22 @@ export class ProfileComponent implements OnInit {
   ngOnInit() {
     this.sub = this.route.params.subscribe(params => {
       this.userid = +params['userid'];
-      //console.log(this.userid);
     });
 
     if (this.userid) {
       this.userService.getUser(this.userid).subscribe(data => {
-        if (!data.success) {
-          if (data.errcode) {
-            console.log(data);
-          }
-          //console.log(data.message);
-        } else {
+        if (data.success) {
           this.user = JSON.parse(data.data);
+          this.pageHeader = this.user.username + ' Details';
           this.populateForm(this.user);
         }
-        //console.log('data" ' + JSON.stringify(data));
-        console.log('this.user: ' + JSON.stringify(this.user));
+        console.log('profile OnInit getUser');
+        console.log(data);
       });
     }
   }
 
   populateForm(data): void {
-    console.log(data);
     this.profileForm.patchValue({
       username: data.username,
       firstName: data.firstname,
@@ -99,50 +96,46 @@ export class ProfileComponent implements OnInit {
       confirmPassword: data.password,
       lastlogin: data.lastlogin
     });
-    console.log('populateForm form: ' + JSON.stringify(this.profileForm.value));
   }
 
   onSubmit(): void {
     this.message = '';
     if (this.profileForm.dirty && this.profileForm.valid) {
-      //const theForm = this.profileForm.value;
       if (this.userid) {
-        /* console.log(this.userid);
-        console.log(this.profileForm.value); */
         this.userService
           .updateUser(this.userid, this.profileForm.value)
           .subscribe(data => {
-            if (data.success === false) {
-              if (data.errcode) {
-                console.log(data);
-              }
-              console.log(data.message);
-            } else {
-              console.log(data.message);
+            console.log('profile onSubmit updateUser:');
+            console.log(data);
+
+            if (data.success) {
               if (this.userid === this.userService.currentUser.userid) {
                 const theUser: any = JSON.parse(
                   localStorage.getItem('currentUser')
                 );
-                //theUser.user.firstName = this.profileForm.value.firstName;
                 localStorage.setItem('currentUser', JSON.stringify(theUser));
               }
               this.router.navigate(['']);
+            } else {
+              this.message = data.message;
             }
           });
       } else {
         this.userService.insertUser(this.profileForm.value).subscribe(data => {
-          if (data.success === false) {
-            console.log(data.message);
-          } else {
-            console.log(data.message);
+          console.log('profile onSubmit insertUser:');
+          console.log(data);
+
+          if (data.success) {
             const theUser: any = JSON.parse(
               localStorage.getItem('currentUser')
             );
-            //theUser.user.firstName = this.profileForm.value.firstName;
+
             localStorage.setItem('currentUser', JSON.stringify(theUser));
+
             this.router.navigate(['']);
+          } else {
+            this.message = data.message;
           }
-          this.profileForm.reset();
         });
       }
     }

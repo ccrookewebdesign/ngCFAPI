@@ -33,13 +33,15 @@ export class LoginComponent implements OnInit {
   onSubmit() {
     this.message = '';
     this.userService.login(this.loginForm.value).subscribe(response => {
-      //console.log(response);
       if (response.success) {
         this.router.navigate(['']);
       } else {
         this.disableForm = true;
         this.message = response.message;
       }
+
+      console.log('login onSubmit login:');
+      console.log(response);
     });
   }
 }

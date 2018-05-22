@@ -25,13 +25,6 @@ export class MainNavComponent {
     private router: Router
   ) {}
 
-  ngOnInit() {
-    /* this.userService.loggedIn().subscribe(loggedIn => {
-      console.log(loggedIn);
-      this.isLoggedIn = loggedIn;
-    }); */
-  }
-
   isLoggedIn(): boolean {
     return this.userService.loggedIn();
   }

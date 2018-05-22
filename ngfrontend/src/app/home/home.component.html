@@ -1,13 +1,25 @@
-<mat-form-field>
-  <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-</mat-form-field>
+<h2>
+  Manage Users
+</h2>
 
-<div class="mat-elevation-z8">
+<div class="message">
+  &nbsp;
+  <span class="error" *ngIf="message">{{message}}</span>&nbsp;
+</div>
+<div class="mat-elevation-z4 listFilter">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+</div>
+
+<div class="mat-elevation-z4">
   <mat-table class="mattable" matPaginator matSort [dataSource]="dataSource">
 
     <ng-container matColumnDef="firstname">
       <mat-header-cell *matHeaderCellDef mat-sort-header> First Name </mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{element.firstname}} </mat-cell>
+      <mat-cell *matCellDef="let element">
+        <a [routerLink]="['/profile', element.userid]">{{element.firstname}}</a>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="lastname">
@@ -28,7 +40,7 @@
     <ng-container matColumnDef="delete">
       <mat-header-cell *matHeaderCellDef> </mat-header-cell>
       <mat-cell *matCellDef="let element">
-        <button mat-button (click)="deleteUser(element.userid);">Delete</button>
+        <button *ngIf="element.userid !== userService.currentUser.userid" mat-button (click)="deleteUser(element.userid);">Delete</button>
       </mat-cell>
     </ng-container>
 

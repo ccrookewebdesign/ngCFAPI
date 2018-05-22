@@ -7,7 +7,8 @@
 
     <form [formGroup]="loginForm">
       <mat-form-field>
-        <input dirfocus formControlName="username" matInput placeholder="Username">
+        <!-- dirfocus -->
+        <input formControlName="username" matInput placeholder="Username">
         <mat-error *ngIf="loginForm.get('username').errors">Please enter a username</mat-error>
       </mat-form-field>
       <mat-form-field>
@@ -20,7 +21,6 @@
   </mat-card>
   <div class="text-right">
     <a routerLink="/profile">Register</a>
-    <!-- <button routerLink="/profile" mat-button>Register</button> -->
   </div>
-  <pre style="text-align: left;">{{ loginForm.value | json }}</pre>
+  <!-- <pre style="text-align: left;">{{ loginForm.value | json }}</pre> -->
 </div>

@@ -40,7 +40,7 @@ export class UserService {
 
   constructor(private http: HttpClient) {
     const theUser: any = JSON.parse(localStorage.getItem('currentUser'));
-    //console.log(theUser);
+
     if (theUser) {
       this.jwtToken = theUser.token;
     }
@@ -55,20 +55,14 @@ export class UserService {
       .post(environment.apiUrl + 'login', oUser, httpOptions)
       .pipe(
         tap((response: APIResponse) => {
-          console.log('loginuser response: ' + JSON.stringify(response));
           if (response.success) {
             this.currentUser = <User>response.data;
             const userObj: any = {};
             userObj.user = response.data;
             userObj.token = response.token;
             this.jwtToken = response.token;
-            console.log(
-              'loginuser success currentuser: ' +
-                JSON.stringify(this.currentUser)
-            );
+
             localStorage.setItem('currentUser', JSON.stringify(userObj));
-            console.log('local storage');
-            console.log(JSON.parse(localStorage.getItem('currentUser')));
           }
         }),
         catchError(this.handleError)
@@ -76,7 +70,6 @@ export class UserService {
   }
 
   getUser(userid): Observable<any> {
-    console.log('token: ' + this.jwtToken);
     const httpOptions = {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
@@ -85,11 +78,10 @@ export class UserService {
     };
     return this.http
       .get(`${environment.apiUrl}user/${userid}`, httpOptions)
-      .pipe(tap(data => console.log(data)), catchError(this.handleError));
+      .pipe(catchError(this.handleError));
   }
 
   getUsers(): Observable<any> {
-    console.log('token: ' + this.jwtToken);
     const httpOptions = {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
@@ -98,7 +90,7 @@ export class UserService {
     };
     return this.http
       .get(`${environment.apiUrl}users/`, httpOptions)
-      .pipe(tap(data => console.log(data)), catchError(this.handleError));
+      .pipe(catchError(this.handleError));
   }
 
   insertUser(oUser): Observable<any> {
@@ -110,7 +102,6 @@ export class UserService {
       .post(environment.apiUrl + 'insertuser', oUser, httpOptions)
       .pipe(
         tap((response: APIResponse) => {
-          console.log(response);
           if (response.success) {
             this.currentUser = <User>response.data;
             const userObj: any = {};
@@ -160,9 +151,8 @@ export class UserService {
       password: '',
       lastlogin: ''
     };
+
     localStorage.removeItem('currentUser');
-    //this.jwtToken = '';
-    console.log(this.currentUser);
   }
 
   loggedIn(): boolean {
@@ -170,6 +160,7 @@ export class UserService {
   }
 
   private handleError(error: Response) {
+    console.error('error: ');
     console.error(error);
     return of(error || 'Server error');
   }
