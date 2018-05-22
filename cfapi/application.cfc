@@ -1,4 +1,3 @@
-/*testing*/
 component hint="application component" {
 
 	this.name = 'cfapi';
@@ -35,4 +34,4 @@ component hint="application component" {
 	
 	}
 
-}
+}	

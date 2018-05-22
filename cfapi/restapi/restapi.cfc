@@ -55,30 +55,14 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     httpmethod = 'post'
     produces = 'application/json' 
   {
-		
-		var response = {};
-
-		/* blnsignup = objUser.insertUser(structform);
-		
-    if (blnsignup) {
-
-			response['success'] = true;
-			response['message'] = 'User created successfully';
-
-    } else {
-
-			response['success'] = false;
-			response['message'] = 'Username already exists.';
-
-		} */
-
+    
+    var response = {};
+    
     response = objUser.insertUser(structform);
     
     return response;
-
-		return response;
-		
-	}
+    
+  }
   
   remote struct function getUser(required any id restargsource = 'path') 
     restpath = 'user/{id}'
@@ -140,25 +124,21 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     httpmethod = 'put'
     produces = 'application/json'
   {
-
-		var response = {};
-
-		verify = checkToken();
-
-		if (!verify.success) {
-
-			response['success'] = false;
-			response['message'] = verify.message;
-		  response['errcode'] = 'no-token';
-
-		} else {
-
-			response = objUser.updateUser(arguments.id, arguments.structform);
-
-		}
-
-	  return response;
-  
+    
+    var response = {};
+    
+    verify = checkToken();
+    
+    if (!verify.success) {
+      response['success'] = false;
+      response['message'] = verify.message;
+      response['errcode'] = 'no-token';
+    } else {
+      response = objUser.updateUser(arguments.id, arguments.structform);
+    }
+    
+    return response;
+    
   }
 
   remote struct function deleteUser(
@@ -169,25 +149,25 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     httpmethod = 'delete'
     produces = 'application/json'
   {
-
-		var response = {};
-
-		verify = checkToken();
-
-		if (!verify.success) {
-
-			response['success'] = false;
-			response['message'] = verify.message;
-		  response['errcode'] = 'no-token';
-
-		} else {
-
-			response = objUser.deleteUser(arguments.id);
-
-		}
-
-	  return response;
-  
+    
+    var response = {};
+    
+    verify = checkToken();
+    
+    if (!verify.success) {
+      
+      response['success'] = false;
+      response['message'] = verify.message;
+      response['errcode'] = 'no-token';
+      
+    } else {
+      
+      response = objUser.deleteUser(arguments.id);
+    
+    }
+    
+    return response;
+    
   }
 
   remote struct function updatePassword(
@@ -206,7 +186,7 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
 
       response['success'] = false;
       response['message'] = verify.message;
-     	response['errcode'] = 'no-token';
+      response['errcode'] = 'no-token';
 
     } else {
 
