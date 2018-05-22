@@ -1,0 +1,61 @@
+<div class="profile center-screen">
+  <div class="message">
+    &nbsp;
+    <span class="error" *ngIf="message">{{message}}</span>&nbsp;
+  </div>
+  <mat-card>
+
+    <form [formGroup]="profileForm">
+      <mat-form-field>
+        <input formControlName="firstName" matInput placeholder="First name *">
+        <mat-error *ngIf="profileForm.get('firstName').hasError('required')">
+          Please enter your first name
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input formControlName="lastName" matInput placeholder="Last name *">
+        <mat-error *ngIf="profileForm.get('lastName').hasError('required')">
+          Please enter your last name
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input formControlName="username" matInput placeholder="Username *">
+        <mat-hint align="end">must be between 5 and 16 characters</mat-hint>
+        <mat-error *ngIf="profileForm.get('firstName').hasError('required')">
+          Please enter a username between 5 and 16 characters
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input formControlName="email" matInput placeholder="Email *">
+        <mat-error *ngIf="profileForm.get('email').hasError('required') || profileForm.get('email').hasError('email')">
+          Please enter a valid email
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input formControlName="password" matInput placeholder="Password *" [type]="hide ? 'password' : 'text'">
+        <mat-icon class="pointer" matSuffix (click)="hide = !hide">
+          {{hide ? 'visibility' : 'visibility_off'}}
+        </mat-icon>
+        <mat-hint align="end">must be at least 8 characters of letters, numbers, and symbols</mat-hint>
+        <mat-error *ngIf="profileForm.get('password').hasError('required') || profileForm.get('password').hasError('pattern')">
+          Please enter a valid password
+        </mat-error>
+        <mat-error *ngIf="profileForm.get('password').hasError('minLength') || profileForm.get('password').hasError('maxLength')">
+          Password must be between 8 and 16 characters
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input formControlName="confirmPassword" matInput placeholder="Confirm password *" [type]="hide ? 'password' : 'text'">
+        <mat-error *ngIf="profileForm.get('confirmPassword').hasError('invalid')">
+          The passwords do not match
+        </mat-error>
+      </mat-form-field>
+
+      <button (click)="onSubmit()" mat-raised-button [disabled]="profileForm.invalid || disableForm">
+        Save
+      </button>
+    </form>
+  </mat-card>
+
+  <pre style="text-align: left;">{{ profileForm.value | json }}</pre>
+</div>
