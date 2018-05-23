@@ -36,7 +36,7 @@ component hint = 'user rest functions' displayname = 'user' {
       userStruct['lastlogin'] = qryGetUser.lastlogin;
       
       resObj['success'] = true;
-      resObj['message'] = Hash(qryGetUser.salt & qryGetUser.password_nohash);
+      resObj['message'] = 'User (userid: ' & userid & ') retrieved successfully';
       resObj['data'] = SerializeJSON(userStruct);
       
     }
@@ -143,6 +143,7 @@ component hint = 'user rest functions' displayname = 'user' {
       token = jwt.encode(payload);
       
       resObj['success'] = true;
+      resObj['message'] = 'User successfully logged in';
       resObj['data'] = {
         'userid': qryLoginUser.userid,
         'username': qryLoginUser.username,
@@ -295,69 +296,93 @@ component hint = 'user rest functions' displayname = 'user' {
       name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
       
     qryCheckUser = qryCheckUser.execute().getResult();
-    
+
     if (qryCheckUser.recordcount) {
+
+      qryCheckUserName = new Query(datasource = request.dsn);
+    
+      qryCheckUserName.setSQL('
+        SELECT *
+        FROM users u
+        WHERE u.username = :username 
+          AND u.userid != :userid
+      ');
       
-      try {
-        qryUpdateUser = new Query(datasource = request.dsn);
+      qryCheckUserName.addParam(
+        name = 'username', value = trim(structform.username), cfsqltype = 'cf_sql_varchar');
+      qryCheckUserName.addParam(
+        name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
         
-        qryUpdateUser.setSQL('
-          UPDATE users
-          SET firstname = :firstname,
-            lastname = :lastname,
-            email = :email,
-            username = :username,
-            password = :password,
-            password_nohash = :password_nohash,
-            salt = :salt
-          WHERE userid = :userid
-        ');
-        
-        Salt="";
-        
-        for (i = 1; i <= 12; i = i + 1) {
-          Salt = Salt & chr(RandRange(65,90));
-        }
-        
-        hashpwd = Hash(Salt & structform.password);
-        
-        qryUpdateUser.addParam(
-          name = 'firstname', value = trim(structform.firstname), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'lastname', value = trim(structform.lastname), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'email', value = trim(structform.email), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'username', value = trim(structform.username), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'password', value = trim(hashpwd), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'password_nohash', value = trim(structform.password), cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'salt', value = salt, cfsqltype = 'cf_sql_varchar');
-        qryUpdateUser.addParam(
-          name = 'userid', value = arguments.userid, cfsqltype = 'cf_sql_varchar');
+      qryCheckUserName = qryCheckUserName.execute().getResult();
+
+      if (!qryCheckUserName.recordcount) {
+        try {
+          qryUpdateUser = new Query(datasource = request.dsn);
           
-        qryUpdateUser.execute();
+          qryUpdateUser.setSQL('
+            UPDATE users
+            SET firstname = :firstname,
+              lastname = :lastname,
+              email = :email,
+              username = :username,
+              password = :password,
+              password_nohash = :password_nohash,
+              salt = :salt
+            WHERE userid = :userid
+          ');
+          
+          Salt="";
+          
+          for (i = 1; i <= 12; i = i + 1) {
+            Salt = Salt & chr(RandRange(65,90));
+          }
+          
+          hashpwd = Hash(Salt & structform.password);
+          
+          qryUpdateUser.addParam(
+            name = 'firstname', value = trim(structform.firstname), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'lastname', value = trim(structform.lastname), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'email', value = trim(structform.email), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'username', value = trim(structform.username), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'password', value = trim(hashpwd), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'password_nohash', value = trim(structform.password), cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'salt', value = salt, cfsqltype = 'cf_sql_varchar');
+          qryUpdateUser.addParam(
+            name = 'userid', value = arguments.userid, cfsqltype = 'cf_sql_varchar');
+            
+          qryUpdateUser.execute();
+          
+          resObj['success'] = true;
+          resObj['message'] = 'User details updated successfully.';
+          resObj['data'] = {
+            'userid': arguments.userid,
+            'username': structform.username,
+            'firstName': structform.firstname,
+            'lastName': structform.lastname,
+            'email': structform.email,
+            'password':structform.password
+          };
+          
+        } catch (any e) {
+          
+          resObj['success'] = false;
+          resObj['message'] = 'Problem executing database query ' & e['message'];
         
-        resObj['success'] = true;
-        resObj['message'] = 'User details updated successfully.';
-        resObj['data'] = {
-          'userid': arguments.userid,
-          'username': structform.username,
-          'firstName': structform.firstname,
-          'lastName': structform.lastname,
-          'email': structform.email,
-          'password':structform.password
-        };
-        
-      } catch (any e) {
-        
+        }
+      
+      } else {
+
         resObj['success'] = false;
-        resObj['message'] = 'Problem executing database query ' & e['message'];
-      
+        resObj['message'] = 'This username is taken. Please choose another';
+
       }
-      
+
     } else {
       
       resObj['success'] = false;

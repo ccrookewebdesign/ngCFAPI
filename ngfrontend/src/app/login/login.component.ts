@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from './../services/user.service';
 
+import { map } from 'rxjs/operators';
+
 @Component({
   selector: 'login',
   styleUrls: ['login.component.scss'],
@@ -24,14 +26,22 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loginForm.valueChanges.subscribe(val => {
-      this.disableForm = false;
-      this.message = '';
-    });
+    this.loginForm.valueChanges
+      .pipe(
+        map(value => {
+          value.username = value.username.trim();
+          value.password = value.password.trim();
+        })
+      )
+      .subscribe(val => {
+        this.disableForm = false;
+        this.message = '';
+      });
   }
 
   onSubmit() {
     this.message = '';
+
     this.userService.login(this.loginForm.value).subscribe(response => {
       if (response.success) {
         this.router.navigate(['']);

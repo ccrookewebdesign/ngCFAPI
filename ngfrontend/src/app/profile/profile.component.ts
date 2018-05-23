@@ -21,7 +21,7 @@ function passwordConfirm(c: AbstractControl): any {
 
   if (!pwd || !cpwd) return;
 
-  if (pwd.value !== cpwd.value) {
+  if (pwd.value.trim() !== cpwd.value.trim()) {
     return { invalid: true };
   }
 }
@@ -84,6 +84,23 @@ export class ProfileComponent implements OnInit {
         console.log(data);
       });
     }
+
+    this.profileForm.valueChanges
+      .pipe(
+        map(value => {
+          value.firstName = value.firstName.trim();
+          value.lastName = value.lastName.trim();
+          value.username = value.username.trim();
+          value.email = value.email.trim();
+          value.password = value.password.trim();
+          value.confirmPassword = value.confirmPassword.trim();
+          return value;
+        })
+      )
+      .subscribe(val => {
+        this.disableForm = false;
+        this.message = '';
+      });
   }
 
   populateForm(data): void {
