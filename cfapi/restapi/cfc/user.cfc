@@ -4,20 +4,8 @@ component hint = 'user rest functions' displayname = 'user' {
     hint = 'Get user details' {
       
     var resObj = {};
-    returnArray = ArrayNew(1);
     
-    qryGetUser = new Query(datasource = request.dsn);
-    
-    qryGetUser.setSQL('
-      SELECT *
-      FROM users u
-      WHERE u.userid = :userid
-    ');
-    
-    qryGetUser.addParam(
-      name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
-      
-    qryGetUser = qryGetUser.execute().getResult();
+    qryGetUser = returnUser(arguments.userid);
     
     if (!qryGetUser.recordcount) {
       
@@ -26,15 +14,8 @@ component hint = 'user rest functions' displayname = 'user' {
       
     } else {
       
-      userStruct = StructNew();
-      userStruct['userid'] = userid;
-      userStruct['firstname'] = qryGetUser.firstname;
-      userStruct['lastname'] = qryGetUser.lastname;
-      userStruct['username'] = qryGetUser.username;
-      userStruct['email'] = qryGetUser.email;
-      userStruct['password'] = qryGetUser.password_nohash;
-      userStruct['lastlogin'] = qryGetUser.lastlogin;
-      
+      userStruct = setUserStruct(qryGetUser);
+            
       resObj['success'] = true;
       resObj['message'] = 'User (userid: ' & userid & ') retrieved successfully';
       resObj['data'] = SerializeJSON(userStruct);
@@ -70,15 +51,7 @@ component hint = 'user rest functions' displayname = 'user' {
       
       for (user in qryGetUser) {
         
-        userStruct = StructNew();
-        userStruct['userid'] = user.userid;
-        userStruct['firstname'] = user.firstname;
-        userStruct['lastname'] = user.lastname;
-        userStruct['username'] = user.username;
-        userStruct['email'] = user.email;
-        userStruct['password'] = user.password_nohash;
-        userStruct['lastlogin'] = user.lastlogin;
-        
+        userStruct = setUserStruct(user);
         ArrayAppend(returnArray, userStruct);
         
       }
@@ -131,16 +104,7 @@ component hint = 'user rest functions' displayname = 'user' {
         
       qryUpdateLoginDate.execute();
       
-      expdt =  dateAdd('n', 30, now());
-      utcDate = dateDiff('s', dateConvert('utc2Local', createDateTime(1970, 1, 1, 0, 0, 0)), expdt);
-      
-      jwt = new jwt(Application.jwtkey);
-      payload = {
-        'ts' = now(),
-        'userid' = qryLoginUser.userid,
-        'Exp' = utcDate
-      };
-      token = jwt.encode(payload);
+      token = setToken(qryLoginUser.userid);
       
       resObj['success'] = true;
       resObj['message'] = 'User successfully logged in';
@@ -190,13 +154,7 @@ component hint = 'user rest functions' displayname = 'user' {
     
     } else {
       
-      Salt="";
-      
-      for (i = 1; i <= 12; i = i + 1) {
-        Salt = Salt & chr(RandRange(65,90));
-      }
-      
-      hashpwd = Hash(Salt & structform.password);
+      hashpwd = hashPassword(structform.password);
       
       qryInsertUser = new Query(datasource = request.dsn);
       
@@ -239,24 +197,15 @@ component hint = 'user rest functions' displayname = 'user' {
       qryInsertUser.addParam(
         name = 'lastlogin', value = trim(now()), cfsqltype = 'cf_sql_timestamp');
       qryInsertUser.addParam(
-        name = 'password', value = trim(hashpwd), cfsqltype = 'cf_sql_varchar');
+        name = 'password', value = trim(hashpwd.password), cfsqltype = 'cf_sql_varchar');
       qryInsertUser.addParam(
         name = 'password_nohash', value = trim(structform.password), cfsqltype = 'cf_sql_varchar');
       qryInsertUser.addParam(
-        name = 'salt', value = trim(salt), cfsqltype = 'cf_sql_varchar');
+        name = 'salt', value = trim(hashpwd.salt), cfsqltype = 'cf_sql_varchar');
         
       qryInsertUser.execute();
       
-      expdt =  dateAdd('n', 30, now());
-      utcDate = dateDiff('s', dateConvert('utc2Local', createDateTime(1970, 1, 1, 0, 0, 0)), expdt);
-      
-      jwt = new jwt(Application.jwtkey);
-      payload = {
-        'ts' = now(),
-        'userid' = newID,
-        'Exp' = utcDate
-      };
-      token = jwt.encode(payload);
+      token = setToken(newID);
       
       resObj['success'] = true;
       resObj['message'] = 'User created successfully';
@@ -270,6 +219,7 @@ component hint = 'user rest functions' displayname = 'user' {
         'lastlogin': dateTimeFormat(now(), 'dd-MMM-yyyy hh:nn:ss tt')
       };
       resObj['token'] = token;
+
     }
     
     return resObj;
@@ -279,23 +229,11 @@ component hint = 'user rest functions' displayname = 'user' {
   public struct function updateUser(
     required numeric userid,
     required any structform)
-    hint = 'Update user details'
-  {
+    hint = 'Update user details' {
     
     var resObj = {};
     
-    qryCheckUser = new Query(datasource = request.dsn);
-    
-    qryCheckUser.setSQL('
-      SELECT *
-      FROM users u
-      WHERE u.userid = :userid
-    ');
-    
-    qryCheckUser.addParam(
-      name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
-      
-    qryCheckUser = qryCheckUser.execute().getResult();
+    qryCheckUser = returnUser(arguments.userid);
 
     if (qryCheckUser.recordcount) {
 
@@ -316,7 +254,10 @@ component hint = 'user rest functions' displayname = 'user' {
       qryCheckUserName = qryCheckUserName.execute().getResult();
 
       if (!qryCheckUserName.recordcount) {
+        
         try {
+          hashpwd = hashPassword(structform.password);
+
           qryUpdateUser = new Query(datasource = request.dsn);
           
           qryUpdateUser.setSQL('
@@ -331,14 +272,6 @@ component hint = 'user rest functions' displayname = 'user' {
             WHERE userid = :userid
           ');
           
-          Salt="";
-          
-          for (i = 1; i <= 12; i = i + 1) {
-            Salt = Salt & chr(RandRange(65,90));
-          }
-          
-          hashpwd = Hash(Salt & structform.password);
-          
           qryUpdateUser.addParam(
             name = 'firstname', value = trim(structform.firstname), cfsqltype = 'cf_sql_varchar');
           qryUpdateUser.addParam(
@@ -348,11 +281,11 @@ component hint = 'user rest functions' displayname = 'user' {
           qryUpdateUser.addParam(
             name = 'username', value = trim(structform.username), cfsqltype = 'cf_sql_varchar');
           qryUpdateUser.addParam(
-            name = 'password', value = trim(hashpwd), cfsqltype = 'cf_sql_varchar');
+            name = 'password', value = trim(hashpwd.password), cfsqltype = 'cf_sql_varchar');
           qryUpdateUser.addParam(
             name = 'password_nohash', value = trim(structform.password), cfsqltype = 'cf_sql_varchar');
           qryUpdateUser.addParam(
-            name = 'salt', value = salt, cfsqltype = 'cf_sql_varchar');
+            name = 'salt', value = hashpwd.salt, cfsqltype = 'cf_sql_varchar');
           qryUpdateUser.addParam(
             name = 'userid', value = arguments.userid, cfsqltype = 'cf_sql_varchar');
             
@@ -395,23 +328,11 @@ component hint = 'user rest functions' displayname = 'user' {
   }
   
   public struct function deleteUser(required numeric userid)
-    hint = 'Update user details'
-  {
+    hint = 'Update user details' {
     
     var resObj = {};
     
-    qryCheckUser = new Query(datasource = request.dsn);
-    
-    qryCheckUser.setSQL('
-      SELECT *
-      FROM users u
-      WHERE u.userid = :userid
-    ');
-    
-    qryCheckUser.addParam(
-      name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
-      
-    qryCheckUser = qryCheckUser.execute().getResult();
+    qryCheckUser = returnUser(arguments.userid);
     
     if (qryCheckUser.recordcount) {
       
@@ -448,80 +369,70 @@ component hint = 'user rest functions' displayname = 'user' {
     return resObj;
     
   }
-  
-  public struct function updatePassword(
-    required numeric userid,
-    required any structform)
-    hint = 'Update user password'
+    
+  private query function returnUser(required numeric userid)
+    hint = 'runs query to get user by userid' 
   {
-    
-    var resObj = {};
-    
-    qryCheckUser = new Query(datasource = request.dsn);
-    
-    qryCheckUser.setSQL('
+
+    qryGetUser = new Query(datasource = request.dsn);
+      
+    qryGetUser.setSQL('
       SELECT *
       FROM users u
       WHERE u.userid = :userid
     ');
-    
-    qryCheckUser.addParam(
+      
+    qryGetUser.addParam(
       name = 'userid', value = trim(arguments.userid), cfsqltype = 'cf_sql_integer');
-      
-    qryCheckUser = qryCheckUser.execute().getResult();
-    
-    if (qryCheckUser.recordcount) {
-      
-      if (Hash(qryCheckUser.salt & structform.oldpassword) eq qryCheckUser.password) {
         
-        try {
-          
-          hashpwd = hash(qryCheckUser.salt & structform.password);
-          
-          qryUpdatePassword = new Query(datasource = request.dsn);
-          
-          qryUpdatePassword.setSQL('
-            UPDATE users
-            SET password = :password
-            WHERE userid = :userid
-          ');
-          
-          qryUpdatePassword.addParam(
-            name = 'password', value = trim(hashpwd), cfsqltype = 'cf_sql_varchar');
-          qryUpdatePassword.addParam(
-            name = 'userid', value = arguments.userid, cfsqltype = 'cf_sql_integer');
-            
-          qryUpdatePassword.execute();
-          
-          resObj['success'] = true;
-          resObj['message'] = 'Password updated successfully.';
-          
-        } catch (any e) {
-          
-          resObj['success'] = false;
-          resObj['message'] = 'Problem executing database query ' & e['message'];
-          
-        }
-        
-        resObj['success'] = true;
-        resObj['message'] = 'Password updated successfully.';
-        
-      } else {
-        
-        resObj['success'] = false;
-        resObj['message'] = 'Incorrect old password.';
-        
-      }
+    return qryGetUser.execute().getResult();
+
+  } 
+
+  private struct function setUserStruct(required any user)
+    hint = 'returns a struct populated with user info'
+  {
+    userStruct = StructNew();
+    userStruct['userid'] = user.userid;
+    userStruct['firstname'] = user.firstname;
+    userStruct['lastname'] = user.lastname;
+    userStruct['username'] = user.username;
+    userStruct['email'] = user.email;
+    userStruct['password'] = user.password_nohash;
+    userStruct['lastlogin'] = user.lastlogin;
+
+    return userStruct;
+
+  }
+
+  private struct function hashPassword(required string password)
+    hint = 'encrypts the password' {
+
+    str="";
       
-    } else {
-      
-      resObj['success'] = false;
-      resObj['message'] = 'Incorrect user id provided.';
-      
+    for (i = 1; i <= 12; i = i + 1) {
+      str = str & chr(RandRange(65,90));
     }
+      
+    return { password: Hash(str & arguments.password), salt: str };
+
+  }
+
+  private any function setToken(required numeric userid)
+    hint = 'sets the token' {
+
+    expdt =  dateAdd('n', 30, now());
+    utcDate = dateDiff('s', dateConvert('utc2Local', createDateTime(1970, 1, 1, 0, 0, 0)), expdt);
+     
+    jwt = new jwt(Application.jwtkey);
     
-    return resObj;
+    payload = {
+      'ts' = now(),
+      'userid' = arguments.userid,
+      'Exp' = utcDate
+    };
+    
+    return jwt.encode(payload);
     
   }
-  
 }
