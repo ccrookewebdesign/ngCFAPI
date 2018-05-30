@@ -2,7 +2,7 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
 
   objUser = new cfc.user();
 
-  public any function checkToken() {
+  public struct function checkToken() {
   
     var response = {};
     requestData = GetHttpRequestData();

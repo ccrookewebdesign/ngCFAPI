@@ -1,4 +1,4 @@
-component hint="application component" {
+component hint = 'application component' {
 
   this.name = 'cfapi';
   this.restsettings.cfclocation = './';

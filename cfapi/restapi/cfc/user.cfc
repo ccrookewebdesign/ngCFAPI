@@ -134,6 +134,13 @@ component hint = 'user rest functions' displayname = 'user' {
     hint = 'Register User' {
       
     var resObj = {};
+
+    resObj = validateUser(arguments.structform);
+
+    if (!resObj.success) {
+      return resObj;
+    }
+
     qryCheckUser = new Query(datasource = request.dsn);
     
     qryCheckUser.setSQL('
@@ -233,6 +240,12 @@ component hint = 'user rest functions' displayname = 'user' {
     
     var resObj = {};
     
+    resObj = validateUser(arguments.structform);
+
+    if (!resObj.success) {
+      return resObj;
+    }
+
     qryCheckUser = returnUser(arguments.userid);
 
     if (qryCheckUser.recordcount) {
@@ -433,6 +446,31 @@ component hint = 'user rest functions' displayname = 'user' {
     };
     
     return jwt.encode(payload);
+    
+  }
+
+  private any function validateUser(required struct user)
+    hint = 'validates the incoming user data' {
+
+    var resObj = {};
+
+    resObj['success'] = true;
+    resObj['message'] = 'Validation Succeeded.';
+
+    if(
+      !len(trim(arguments.user.firstname)) or 
+      !len(trim(arguments.user.lastname)) or 
+      !len(trim(arguments.user.email)) or 
+      !len(trim(arguments.user.username)) or 
+      !len(trim(arguments.user.password))      
+    ) { 
+      
+      resObj['success'] = false;
+      resObj['message'] = 'Please fill in all required fields and provide a valid email address';
+    
+    }
+
+    return resObj;
     
   }
   
