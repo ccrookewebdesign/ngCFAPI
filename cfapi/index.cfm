@@ -1,4 +1,2 @@
-<cfoutput>
-  #getPageContext().getRequest().getRequestURI()# 
-  rest api is running at http://localhost:8500/rest/api/cfapi
-</cfoutput>
+<cfset nada = getPageContext().getRequest().getRequestURI()>
+rest api is running at http://localhost:8500/rest/api/cfapi

@@ -22,7 +22,7 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
         response['success'] = false;
         response['message'] = e.message;
 
-        return response;
+        //return response;
 
       }
 
@@ -43,10 +43,11 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     produces = 'application/json'
   {
 
-    var response = {};
+    /* var response = {};
     response = objUser.loginUser(structform);
     
-    return response;
+    return response; */
+    return objUser.loginUser(structform);
   
   }
 
@@ -56,11 +57,12 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     produces = 'application/json' 
   {
     
-    var response = {};
+    /* var response = {};
     
     response = objUser.insertUser(structform);
     
-    return response;
+    return response; */
+    return objUser.insertUser(structform);   
     
   }
   
@@ -130,11 +132,15 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     verify = checkToken();
     
     if (!verify.success) {
+      
       response['success'] = false;
       response['message'] = verify.message;
       response['errcode'] = 'no-token';
+    
     } else {
+      
       response = objUser.updateUser(arguments.id, arguments.structform);
+    
     }
     
     return response;
@@ -169,33 +175,5 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     return response;
     
   }
-
-  remote struct function updatePassword(
-    required numeric id restargsource = 'path',
-    required any structform) 
-    restpath = 'password/{id}'
-    httpmethod = 'put'
-    produces = 'application/json'
-  {
-    
-    var response = {};
-
-    verify = checkToken();
-
-    if (!verify.success) {
-
-      response['success'] = false;
-      response['message'] = verify.message;
-      response['errcode'] = 'no-token';
-
-    } else {
-
-      response = objUser.updatePassword(arguments.id, arguments.structform);
-
-    }
-    
-    return response;
-
-  }
-
+  
 }
