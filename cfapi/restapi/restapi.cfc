@@ -22,8 +22,6 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
         response['success'] = false;
         response['message'] = e.message;
 
-        //return response;
-
       }
 
     } else {
@@ -43,10 +41,6 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     produces = 'application/json'
   {
 
-    /* var response = {};
-    response = objUser.loginUser(structform);
-    
-    return response; */
     return objUser.loginUser(structform);
   
   }
@@ -57,11 +51,6 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     produces = 'application/json' 
   {
     
-    /* var response = {};
-    
-    response = objUser.insertUser(structform);
-    
-    return response; */
     return objUser.insertUser(structform);   
     
   }
@@ -101,7 +90,6 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     var response = {};
 
     verify = checkToken();
-    //verify.success = true;
     
     if (!verify.success) {
 
