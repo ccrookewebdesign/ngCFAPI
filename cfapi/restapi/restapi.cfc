@@ -101,6 +101,7 @@ component hint = 'rest controller' rest = 'true' restpath = 'cfapi' {
     var response = {};
 
     verify = checkToken();
+    //verify.success = true;
     
     if (!verify.success) {
 

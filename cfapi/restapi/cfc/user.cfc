@@ -146,18 +146,24 @@ component hint = 'user rest functions' displayname = 'user' {
     qryCheckUser.setSQL('
       SELECT *
       FROM users u
-      WHERE u.username = :username
+      WHERE u.username = :username or u.email = :email
     ');
     
     qryCheckUser.addParam(
       name = 'username', value = trim(structform.username), cfsqltype = 'cf_sql_varchar');
+    qryCheckUser.addParam(
+      name = 'email', value = trim(structform.email), cfsqltype = 'cf_sql_varchar');
       
     qryCheckUser = qryCheckUser.execute().getResult();
     
     if (qryCheckUser.recordcount) {
       
       resObj['success'] = false;
-      resObj['message'] = 'Username already exists.';
+      resObj['message'] = iif(
+        qryCheckUser.email eq structform.email, 
+        de('This email is already registered in our system. Login to access your account'),
+        de('Username already exists.')        
+      );
     
     } else {
       
